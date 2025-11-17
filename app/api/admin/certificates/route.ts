@@ -99,7 +99,7 @@ export async function PUT(request: Request) {
 
     // Issue certificates to all enrollments (marks them as attended)
     const updates = await Promise.all(
-      activity.enrollments.map(async (enrollment) => {
+      activity.enrollments.map(async (enrollment: any) => {
         // Update enrollment - mark as attended and issue certificate
         const { error: updateError } = await supabase
           .from('enrollments')

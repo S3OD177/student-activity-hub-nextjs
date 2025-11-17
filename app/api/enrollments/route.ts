@@ -124,12 +124,13 @@ export async function DELETE(req: Request) {
       )
     }
 
-    await prisma.enrollment.deleteMany({
-      where: {
-        userId: parseInt(session.user.id),
-        activityId: parseInt(activityId)
-      }
-    })
+    const { error } = await supabase
+      .from('enrollments')
+      .delete()
+      .eq('user_id', parseInt(session.user.id))
+      .eq('activity_id', parseInt(activityId))
+
+    if (error) throw error
 
     return NextResponse.json({ message: "Unenrolled successfully" })
   } catch (error) {

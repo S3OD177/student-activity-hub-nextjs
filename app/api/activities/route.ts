@@ -26,34 +26,31 @@ export async function GET(req: Request) {
     const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
-    let where: any = {}
-
-    if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { location: { contains: search } },
-      ]
-    }
-
-    if (status === "upcoming") {
-      where.date = { gte: currentDate }
-    } else if (status === "ended") {
-      where.date = { lt: currentDate }
-    }
-
-    if (academicLevel) {
-      where.academicLevel = academicLevel
-    }
-
-    if (major) {
-      where.major = major
-    }
-
-    const { data: activities, error } = await supabase
+    let query = supabase
       .from('activities')
       .select('*')
       .order('date', { ascending: false })
+
+    // Apply filters
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location.ilike.%${search}%`)
+    }
+
+    if (status === "upcoming") {
+      query = query.gte('date', currentDate.toISOString())
+    } else if (status === "ended") {
+      query = query.lt('date', currentDate.toISOString())
+    }
+
+    if (academicLevel) {
+      query = query.eq('academic_level', academicLevel)
+    }
+
+    if (major) {
+      query = query.eq('major', major)
+    }
+
+    const { data: activities, error } = await query
 
     if (error) throw error
 

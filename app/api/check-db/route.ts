@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Simple database check
-    const response = await fetch(process.env.DATABASE_URL || '');
+    // Simple database check using Vercel's environment variables
+    const response = await fetch(process.env.POSTGRES_PRISMA_URL || '');
     
     if (!response.ok) {
       throw new Error('Could not connect to the database');

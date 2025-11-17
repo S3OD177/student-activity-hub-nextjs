@@ -40,7 +40,7 @@ export default async function TestDBPage() {
             {JSON.stringify({
               timestamp: new Date().toISOString(),
               environment: process.env.NODE_ENV,
-              databaseUrl: process.env.DATABASE_URL ? '*** (hidden for security)' : 'Not set',
+              databaseUrl: process.env.POSTGRES_PRISMA_URL ? '*** (hidden for security)' : 'Not set',
               nodeVersion: process.version
             }, null, 2)}
           </pre>

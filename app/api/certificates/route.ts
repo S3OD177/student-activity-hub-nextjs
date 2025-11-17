@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     // Check if user owns this enrollment
-    if (enrollment.userId !== parseInt(session.user.id)) {
+    if (enrollment.user_id !== parseInt(session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
@@ -62,33 +62,35 @@ export async function POST(request: Request) {
 
     const { enrollmentId } = await request.json()
 
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { id: enrollmentId },
-      include: {
-        user: true,
-        activity: true,
-      },
-    })
+    const { data: enrollment, error } = await supabase
+      .from('enrollments')
+      .select('*, user(*), activity(*)')
+      .eq('id', enrollmentId)
+      .single()
+
+    if (error) throw error
 
     if (!enrollment) {
       return NextResponse.json({ error: "Enrollment not found" }, { status: 404 })
     }
 
     // Check if user owns this enrollment
-    if (enrollment.userId !== parseInt(session.user.id)) {
+    if (enrollment.user_id !== parseInt(session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
     // Update certificate issued status
-    const updated = await prisma.enrollment.update({
-      where: { id: enrollmentId },
-      data: {
-        certificateIssued: true,
-        certificateDate: new Date(),
-      },
-    })
+    const { error: updateError } = await supabase
+      .from('enrollments')
+      .update({
+        certificate_issued: true,
+        certificate_date: new Date().toISOString(),
+      })
+      .eq('id', enrollmentId)
 
-    return NextResponse.json(updated)
+    if (updateError) throw updateError
+
+    return NextResponse.json({ success: true, enrollment })
   } catch (error) {
     console.error("Error issuing certificate:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

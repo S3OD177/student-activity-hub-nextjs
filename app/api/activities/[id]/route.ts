@@ -27,7 +27,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(activity)
+    return NextResponse.json(data[0])
   } catch (error) {
     console.error("Error fetching activity:", error)
     return NextResponse.json(

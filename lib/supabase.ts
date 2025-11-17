@@ -1,16 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createBrowserClient } from '@/utils/supabase/client'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// Simple Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Database helper functions - using public.users table directly (not auth.users)
+// Simple authentication helper using official Supabase pattern
 export const db = {
   // Sign in user - check against public.users table
   async signIn(email: string, password: string) {
     try {
+      const supabase = createBrowserClient()
+      
       // Query public.users table directly
       const { data: users, error } = await supabase
         .from('users')
@@ -65,28 +61,8 @@ export const db = {
   },
 
   // Database queries
-  async query(table: string) {
+  query(table: string) {
+    const supabase = createBrowserClient()
     return supabase.from(table)
-  }
-}
-
-// Test function to check database connection
-export async function testDatabaseConnection() {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('count')
-      .limit(1)
-      .single()
-    
-    if (error) {
-      console.error('Database connection error:', error)
-      return { success: false, error: error.message }
-    }
-    
-    return { success: true, data }
-  } catch (err) {
-    console.error('Connection test failed:', err)
-    return { success: false, error: err }
   }
 }

@@ -1,7 +1,12 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { prisma } from "./prisma"
+import { createClient } from '@supabase/supabase-js'
 import bcrypt from "bcryptjs"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -12,43 +17,36 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log('🔍 Auth attempt with email:', credentials?.email)
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Missing credentials')
           throw new Error("Invalid credentials")
         }
 
         try {
-          console.log('🔍 Looking up user in database...')
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
-          })
+          // Query Supabase users table
+          const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', credentials.email)
+            .single()
 
-          console.log('🔍 User found:', !!user)
-          if (!user) {
-            console.log('❌ User not found in database')
+          if (error || !user) {
             throw new Error("User not found")
           }
 
-          console.log('🔍 Comparing passwords...')
+          // Verify password with bcrypt
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           )
 
-          console.log('🔍 Password valid:', isPasswordValid)
           if (!isPasswordValid) {
-            console.log('❌ Invalid password')
             throw new Error("Invalid password")
           }
 
-          if (!user.isVerified) {
-            console.log('❌ User not verified')
+          if (!user.is_verified) {
             throw new Error("Please verify your email first")
           }
 
-          console.log('✅ Authentication successful for:', user.email)
           return {
             id: user.id.toString(),
             email: user.email,
@@ -56,7 +54,6 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           }
         } catch (error) {
-          console.error('❌ Auth error:', error)
           if (error instanceof Error) {
             throw error
           }
@@ -87,5 +84,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || 'bXlzdXBlcnNlY3JldGtleWZvcm5leHRhdXRoMjAyNGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MTIzNDU2Nzg5MA==',
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-key-for-development-only-change-in-production",
 }

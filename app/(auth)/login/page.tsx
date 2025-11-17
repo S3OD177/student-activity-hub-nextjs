@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock } from "lucide-react"
-import { db } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,14 +25,18 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const { data, error: loginError } = await db.signIn(formData.email, formData.password)
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
 
-      if (loginError) {
-        setError(loginError.message)
-      } else if (data?.user) {
-        // Redirect based on role
-        const redirectPath = data.user.role === 'admin' ? '/admin' : '/dashboard'
-        window.location.href = redirectPath
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.ok) {
+        // Successful login - NextAuth will handle the session
+        router.push("/dashboard")
+        router.refresh()
       }
     } catch (err) {
       setError("Something went wrong")

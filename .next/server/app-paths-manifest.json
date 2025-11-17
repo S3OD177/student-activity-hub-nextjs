@@ -1,11 +1,4 @@
 {
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/enrollments/route": "app/api/enrollments/route.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/api/announcements/route": "app/api/announcements/route.js",
-  "/api/activities/route": "app/api/activities/route.js",
-  "/admin/page": "app/admin/page.js",
-  "/api/users/route": "app/api/users/route.js",
-  "/api/clubs/route": "app/api/clubs/route.js"
+  "/admin/page": "app/admin/page.js"
 }

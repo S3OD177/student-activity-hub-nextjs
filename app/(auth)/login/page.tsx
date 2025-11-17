@@ -113,7 +113,7 @@ export default function LoginPage() {
             </div>
             <Button 
               type="submit" 
-              className={`w-full h-12 text-lg bg-gradient-to-r ${themeConfig.primary} hover:opacity-90 shadow-lg hover:shadow-xl transition-all`}
+              className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In →"}

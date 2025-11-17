@@ -1,12 +1,12 @@
 {
+  "/api/debug-users/route": "app/api/debug-users/route.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/setup-auth/route": "app/api/setup-auth/route.js",
-  "/dashboard/page": "app/dashboard/page.js",
   "/api/enrollments/route": "app/api/enrollments/route.js",
-  "/api/announcements/route": "app/api/announcements/route.js",
   "/api/activities/route": "app/api/activities/route.js",
+  "/api/announcements/route": "app/api/announcements/route.js",
   "/admin/page": "app/admin/page.js",
+  "/api/clubs/route": "app/api/clubs/route.js",
   "/api/users/route": "app/api/users/route.js",
-  "/api/clubs/route": "app/api/clubs/route.js"
+  "/dashboard/page": "app/dashboard/page.js"
 }

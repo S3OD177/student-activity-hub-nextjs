@@ -143,7 +143,7 @@ export default function LoginPage() {
                 size="sm"
                 className="w-full justify-start"
                 onClick={() => {
-                  setFormData({ email: "user@studenthub.com", password: "admin123" })
+                  setFormData({ email: "user@studenthub.com", password: "user123" })
                 }}
               >
                 <span className="mr-2">👤</span> Student Demo
@@ -154,7 +154,7 @@ export default function LoginPage() {
                 size="sm"
                 className="w-full justify-start"
                 onClick={() => {
-                  setFormData({ email: "leader@studenthub.com", password: "admin123" })
+                  setFormData({ email: "leader@studenthub.com", password: "leader123" })
                 }}
               >
                 <span className="mr-2">🎯</span> Club Leader Demo

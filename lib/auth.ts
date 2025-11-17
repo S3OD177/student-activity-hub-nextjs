@@ -12,36 +12,55 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log(' Auth attempt with email:', credentials?.email)
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log(' Missing credentials')
           throw new Error("Invalid credentials")
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+        try {
+          console.log(' Looking up user in database...')
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        if (!user) {
-          throw new Error("User not found")
-        }
+          console.log(' User found:', !!user)
+          if (!user) {
+            console.log(' User not found in database')
+            throw new Error("User not found")
+          }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
+          console.log(' Comparing passwords...')
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
 
-        if (!isPasswordValid) {
-          throw new Error("Invalid password")
-        }
+          console.log(' Password valid:', isPasswordValid)
+          if (!isPasswordValid) {
+            console.log(' Invalid password')
+            throw new Error("Invalid password")
+          }
 
-        if (!user.isVerified) {
-          throw new Error("Please verify your email first")
-        }
+          if (!user.isVerified) {
+            console.log(' User not verified')
+            throw new Error("Please verify your email first")
+          }
 
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          name: user.username,
-          role: user.role,
+          console.log(' Authentication successful for:', user.email)
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.username,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error(' Auth error:', error)
+          if (error instanceof Error) {
+            throw error
+          }
+          throw new Error("Authentication failed")
         }
       }
     })
@@ -68,5 +87,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'bXlzdXBlcnNlY3JldGtleWZvcm5leHRhdXRoMjAyNGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MTIzNDU2Nzg5MA==',
 }

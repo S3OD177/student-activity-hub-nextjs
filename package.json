@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "supabase": "tsx scripts/supabase-manage.ts",
+    "supabase:tables": "tsx scripts/supabase-manage.ts tables",
+    "supabase:users": "tsx scripts/supabase-manage.ts users"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -24,6 +27,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toast": "^1.1.5",
+    "@supabase/supabase-js": "^2.81.1",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "bcryptjs": "^2.4.3",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET() {
   try {
@@ -10,21 +10,19 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(session.user.id) },
-      include: {
-        badges: {
-          include: { badge: true }
-        },
-        _count: {
-          select: {
-            enrollments: true,
-            connections: true,
-            reviews: true
-          }
-        }
-      }
-    })
+    const { data: user, error } = await supabase
+      .from('users')
+      .select(`
+        *,
+        badges(*, badge:badges(*)),
+        enrollments(count),
+        connections(count),
+        reviews(count)
+      `)
+      .eq('id', parseInt(session.user.id))
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(user)
   } catch (error) {
@@ -41,22 +39,26 @@ export async function PUT(req: Request) {
 
     const data = await req.json()
     
-    const user = await prisma.user.update({
-      where: { id: parseInt(session.user.id) },
-      data: {
-        fullName: data.fullName,
-        phoneNumber: data.phoneNumber,
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({
+        full_name: data.fullName,
+        phone_number: data.phoneNumber,
         bio: data.bio,
         avatar: data.avatar,
-        linkedIn: data.linkedIn,
+        linkedin: data.linkedIn,
         github: data.github,
         twitter: data.twitter,
         skills: data.skills,
         gpa: data.gpa ? parseFloat(data.gpa) : null,
-        graduationYear: data.graduationYear ? parseInt(data.graduationYear) : null,
-        studentId: data.studentId,
-      }
-    })
+        graduation_year: data.graduationYear ? parseInt(data.graduationYear) : null,
+        student_id: data.studentId,
+      })
+      .eq('id', parseInt(session.user.id))
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(user)
   } catch (error) {

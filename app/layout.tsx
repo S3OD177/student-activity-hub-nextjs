@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${cairo.className}`}>
         <ThemeProvider
-          defaultTheme="system"
+          defaultTheme="light"
           storageKey="student-hub-theme"
         >
           <ColorThemeProvider>

@@ -1,14 +1,12 @@
 {
-  "/activities/page": "app/activities/page.js",
-  "/portfolio/page": "app/portfolio/page.js",
-  "/activities/[id]/page": "app/activities/[id]/page.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/certificates/page": "app/certificates/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/admin/page": "app/admin/page.js",
-  "/api/activities/route": "app/api/activities/route.js",
-  "/api/users/route": "app/api/users/route.js",
+  "/api/setup-auth/route": "app/api/setup-auth/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/api/enrollments/route": "app/api/enrollments/route.js",
   "/api/announcements/route": "app/api/announcements/route.js",
+  "/api/activities/route": "app/api/activities/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/users/route": "app/api/users/route.js",
   "/api/clubs/route": "app/api/clubs/route.js"
 }

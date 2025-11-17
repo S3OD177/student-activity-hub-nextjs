@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,9 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { Calendar, Lock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useTheme } from "@/contexts/theme-context"
+import { db } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,31 +28,25 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
+      const { data, error } = await db.signIn(formData.email, formData.password)
 
-      if (result?.error) {
+      if (error) {
         toast({
           title: "Error",
-          description: result.error,
+          description: error.message,
           variant: "destructive",
         })
-      } else if (result?.ok) {
+      } else if (data.user) {
+        // Store user in session
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('currentUser', JSON.stringify(data.user))
+        }
+        
         toast({
           title: "Success",
           description: "Logged in successfully!",
         })
-        // Redirect based on role
-        const session = await fetch('/api/auth/session').then(res => res.json())
-        if (session?.user?.role === 'admin') {
-          router.push("/admin")
-        } else {
-          router.push("/dashboard")
-        }
-      } else {
+        router.push("/dashboard")
         router.refresh()
       }
     } catch (error) {

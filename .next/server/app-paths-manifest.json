@@ -2,6 +2,6 @@
   "/activities/page": "app/activities/page.js",
   "/portfolio/page": "app/portfolio/page.js",
   "/activities/[id]/page": "app/activities/[id]/page.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/certificates/page": "app/certificates/page.js"
+  "/certificates/page": "app/certificates/page.js",
+  "/calendar/page": "app/calendar/page.js"
 }

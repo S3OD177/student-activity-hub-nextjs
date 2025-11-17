@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -9,11 +9,13 @@ export async function GET(req: Request) {
   
   if (!activityId) return NextResponse.json({ error: "Activity ID required" }, { status: 400 })
 
-  const questions = await prisma.eventQuestion.findMany({
-    where: { activityId: parseInt(activityId) },
-    include: { user: { select: { username: true, fullName: true } } },
-    orderBy: { createdAt: 'desc' }
-  })
+  const { data: questions, error } = await supabase
+    .from('event_questions')
+    .select('*, user(username, full_name)')
+    .eq('activity_id', parseInt(activityId))
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
   return NextResponse.json(questions)
 }
 
@@ -23,14 +25,18 @@ export async function POST(req: Request) {
 
   const { activityId, question, answer, isFAQ } = await req.json()
   
-  const newQuestion = await prisma.eventQuestion.create({
-    data: {
-      activityId: parseInt(activityId),
-      userId: parseInt(session.user.id),
+  const { data: newQuestion, error } = await supabase
+    .from('event_questions')
+    .insert({
+      activity_id: parseInt(activityId),
+      user_id: parseInt(session.user.id),
       question,
       answer: answer || null,
-      isFAQ: isFAQ || false
-    }
-  })
+      is_faq: isFAQ || false
+    })
+    .select()
+    .single()
+
+  if (error) throw error
   return NextResponse.json(newQuestion)
 }

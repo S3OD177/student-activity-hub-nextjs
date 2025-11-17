@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET() {
   try {
@@ -10,18 +10,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const favorites = await prisma.favorite.findMany({
-      where: { userId: parseInt(session.user.id) },
-      include: {
-        activity: {
-          include: {
-            _count: {
-              select: { enrollments: true }
-            }
-          }
-        }
-      }
-    })
+    const { data: favorites, error } = await supabase
+      .from('favorites')
+      .select('*, activity(*)')
+      .eq('user_id', parseInt(session.user.id))
+
+    if (error) throw error
 
     return NextResponse.json(favorites)
   } catch (error) {

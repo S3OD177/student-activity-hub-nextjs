@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(req: Request) {
   try {
@@ -7,30 +7,14 @@ export async function GET(req: Request) {
     const search = searchParams.get("search")
     const department = searchParams.get("department")
 
-    const clubs = await prisma.club.findMany({
-      where: {
-        AND: [
-          search ? {
-            OR: [
-              { name: { contains: search } },
-              { description: { contains: search } }
-            ]
-          } : {},
-          department ? { department } : {}
-        ]
-      },
-      include: {
-        _count: {
-          select: {
-            memberships: true,
-            activities: true
-          }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    })
+    const { data: clubs, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    return NextResponse.json(clubs)
+    if (error) throw error
+
+    return NextResponse.json(clubs || [])
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch clubs" }, { status: 500 })
   }
@@ -40,15 +24,19 @@ export async function POST(req: Request) {
   try {
     const data = await req.json()
     
-    const club = await prisma.club.create({
-      data: {
+    const { data: club, error } = await supabase
+      .from('clubs')
+      .insert({
         name: data.name,
         description: data.description,
         department: data.department,
         logo: data.logo,
-        leaderId: data.leaderId
-      }
-    })
+        leader_id: data.leaderId
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(club)
   } catch (error) {

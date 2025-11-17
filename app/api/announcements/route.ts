@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET() {
   try {
-    const announcements = await prisma.announcement.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5
-    })
-    return NextResponse.json(announcements)
+    const { data: announcements, error } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (error) throw error
+
+    return NextResponse.json(announcements || [])
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch announcements" }, { status: 500 })
   }
@@ -24,9 +28,13 @@ export async function POST(req: Request) {
 
     const { title, content, priority } = await req.json()
 
-    const announcement = await prisma.announcement.create({
-      data: { title, content, priority }
-    })
+    const { data: announcement, error } = await supabase
+      .from('announcements')
+      .insert({ title, content, priority })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(announcement)
   } catch (error) {
@@ -44,9 +52,12 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
 
-    await prisma.announcement.delete({
-      where: { id: parseInt(id!) }
-    })
+    const { error } = await supabase
+      .from('announcements')
+      .delete()
+      .eq('id', parseInt(id!))
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

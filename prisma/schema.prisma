@@ -1,0 +1,462 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int             @id @default(autoincrement())
+  username           String          @unique
+  email              String          @unique
+  password           String
+  role               String          @default("user") // "user", "admin", or "club_leader"
+  fullName           String?         @map("full_name")
+  phoneNumber        String?         @map("phone_number")
+  isVerified         Boolean         @default(false) @map("is_verified")
+  verificationCode   String?         @map("verification_code")
+  verificationToken  String?         @map("verification_token")
+  tokenExpiry        DateTime?       @map("token_expiry")
+  
+  // Profile enhancements
+  avatar             String?
+  bio                String?
+  linkedIn           String?         @map("linked_in")
+  github             String?
+  twitter            String?
+  skills             String?
+  gpa                Float?
+  graduationYear     Int?            @map("graduation_year")
+  studentId          String?         @map("student_id")
+  
+  // Settings
+  emailNotifications Boolean         @default(true) @map("email_notifications")
+  profileVisibility  String          @default("public") @map("profile_visibility")
+  language           String          @default("en")
+  twoFactorEnabled   Boolean         @default(false) @map("two_factor_enabled")
+  twoFactorSecret    String?         @map("two_factor_secret")
+  
+  // Stats
+  totalPoints        Int             @default(0) @map("total_points")
+  attendanceRate     Float           @default(0) @map("attendance_rate")
+  
+  // Multi-tenant
+  organizationId     Int?            @default(1) @map("organization_id")
+  
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  
+  enrollments        Enrollment[]
+  userInterests      UserInterest[]
+  passwordResets     PasswordReset[]
+  reviews            Review[]
+  favorites          Favorite[]
+  badges             UserBadge[]
+  connections        Connection[]    @relation("UserConnections")
+  connectedBy        Connection[]    @relation("ConnectedUsers")
+  notifications      Notification[]
+  clubMemberships    ClubMembership[]
+  ledClubs          Club[]           @relation("ClubLeader")
+  goals              Goal[]
+  eventQuestions     EventQuestion[]
+  clubPosts          ClubPost[]
+  postComments       PostComment[]
+  eventProposals     EventProposal[]
+
+  @@map("users")
+}
+
+model Activity {
+  id             Int              @id @default(autoincrement())
+  title          String
+  description    String
+  date           DateTime
+  location       String
+  image          String?
+  maxStudents    Int              @default(0) @map("max_students")
+  academicLevel  String?          @map("academic_level")
+  major          String?
+  instructor     String?
+  imageUrl       String?
+  category       String           @default("General")
+  tags           String?
+  status         String           @default("active")
+  clubId         Int?             @map("club_id")
+  estimatedCost  Float?           @map("estimated_cost")
+  actualCost     Float?           @map("actual_cost")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  
+  enrollments    Enrollment[]
+  reviews        Review[]
+  favorites      Favorite[]
+  announcements  Announcement[]
+  questions      EventQuestion[]
+  resourceBookings ResourceBooking[]
+  club           Club?            @relation("ClubActivities", fields: [clubId], references: [id])
+
+  @@map("activities")
+}
+
+model Enrollment {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  activityId        Int
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity          Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  enrolledAt        DateTime @default(now())
+  attended          Boolean  @default(false)
+  feedback          String?
+  certificateIssued Boolean  @default(false)
+  certificateDate   DateTime?
+
+  @@unique([userId, activityId])
+  @@map("enrollments")
+}
+
+model UserInterest {
+  id            Int    @id @default(autoincrement())
+  userId        Int    @map("user_id")
+  academicLevel String @map("academic_level")
+  major         String
+  
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_interests")
+}
+
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  email     String
+  token     String
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  userId    Int?      @map("user_id")
+  
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+  @@map("password_resets")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  activityId Int      @map("activity_id")
+  userId     Int      @map("user_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@map("reviews")
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  activityId Int      @map("activity_id")
+  userId     Int      @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@map("favorites")
+}
+
+model Announcement {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  priority   String   @default("normal") // normal, high, urgent
+  clubId     Int?     @map("club_id")
+  activityId Int?     @map("activity_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  club       Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  activity   Activity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
+
+model Badge {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String
+  icon        String
+  criteria    String
+  points      Int         @default(0)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  badgeId   Int      @map("badge_id")
+  earnedAt  DateTime @default(now()) @map("earned_at")
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Connection {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  friendId    Int      @map("friend_id")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User     @relation("UserConnections", fields: [userId], references: [id], onDelete: Cascade)
+  friend      User     @relation("ConnectedUsers", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@map("connections")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Attendance {
+  id           Int      @id @default(autoincrement())
+  enrollmentId Int      @map("enrollment_id")
+  attended     Boolean  @default(false)
+  status       String   @default("PRESENT") // PRESENT, LATE, EXCUSED
+  checkInTime  DateTime? @map("check_in_time")
+  manuallyAdded Boolean @default(false) @map("manually_added")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("attendances")
+}
+
+model Waitlist {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  activityId Int      @map("activity_id")
+  position   Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, activityId])
+  @@map("waitlists")
+}
+
+model Club {
+  id            Int              @id @default(autoincrement())
+  name          String
+  description   String
+  department    String?
+  logo          String?
+  leaderId      Int?             @map("leader_id")
+  termBudget    Float?           @map("term_budget")
+  totalSpent    Float            @default(0) @map("total_spent")
+  organizationId Int?            @default(1) @map("organization_id")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  
+  leader        User?            @relation("ClubLeader", fields: [leaderId], references: [id])
+  memberships   ClubMembership[]
+  activities    Activity[]       @relation("ClubActivities")
+  announcements Announcement[]
+  posts         ClubPost[]
+
+  @@map("clubs")
+}
+
+model ClubMembership {
+  id        Int      @id @default(autoincrement())
+  clubId    Int      @map("club_id")
+  userId    Int      @map("user_id")
+  status    String   @default("pending")
+  role      String   @default("member")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@map("club_memberships")
+}
+
+model CheckInToken {
+  id         Int      @id @default(autoincrement())
+  activityId Int      @map("activity_id")
+  token      String   @unique
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("checkin_tokens")
+}
+
+model SystemSettings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("system_settings")
+}
+
+model Goal {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  type        String   // "events", "volunteer_hours", "clubs"
+  target      Int
+  current     Int      @default(0)
+  achieved    Boolean  @default(false)
+  term        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  achievedAt  DateTime? @map("achieved_at")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model EventQuestion {
+  id          Int      @id @default(autoincrement())
+  activityId  Int      @map("activity_id")
+  userId      Int      @map("user_id")
+  question    String
+  answer      String?
+  isOfficial  Boolean  @default(false) @map("is_official")
+  isFAQ       Boolean  @default(false) @map("is_faq")
+  createdAt   DateTime @default(now()) @map("created_at")
+  answeredAt  DateTime? @map("answered_at")
+  
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("event_questions")
+}
+
+model ClubPost {
+  id        Int      @id @default(autoincrement())
+  clubId    Int      @map("club_id")
+  userId    Int      @map("user_id")
+  content   String
+  isPoll    Boolean  @default(false) @map("is_poll")
+  pollOptions String? @map("poll_options") // JSON string
+  likes     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  PostComment[]
+
+  @@map("club_posts")
+}
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    Int      @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  post      ClubPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("post_comments")
+}
+
+model Resource {
+  id          Int      @id @default(autoincrement())
+  name        String
+  type        String   // room, lab, hall, equipment
+  capacity    Int?
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  bookings    ResourceBooking[]
+
+  @@map("resources")
+}
+
+model ResourceBooking {
+  id          Int      @id @default(autoincrement())
+  resourceId  Int      @map("resource_id")
+  activityId  Int      @map("activity_id")
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("resource_bookings")
+}
+
+model EventProposal {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  title           String
+  description     String
+  objectives      String
+  expectedAudience Int     @map("expected_audience")
+  risks           String?
+  requiredSupport String?  @map("required_support")
+  status          String   @default("DRAFT") // DRAFT, SUBMITTED, APPROVED, REJECTED
+  adminComments   String?  @map("admin_comments")
+  approvedBy      Int?     @map("approved_by")
+  activityId      Int?     @map("activity_id") // Linked when approved
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("event_proposals")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, ROLE_CHANGE, IMPERSONATE
+  entityType  String   @map("entity_type") // Activity, User, Club, etc.
+  entityId    Int?     @map("entity_id")
+  details     String?  // JSON string with additional info
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+model Organization {
+  id            Int      @id @default(autoincrement())
+  name          String
+  domain        String?  @unique
+  logo          String?
+  primaryColor  String?  @map("primary_color") @default("#3B82F6")
+  secondaryColor String? @map("secondary_color") @default("#8B5CF6")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}

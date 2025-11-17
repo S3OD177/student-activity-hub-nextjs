@@ -1,0 +1,19 @@
+{
+  "/calendar/page": "app/calendar/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/portfolio/page": "app/portfolio/page.js",
+  "/certificates/page": "app/certificates/page.js",
+  "/certificates/[id]/page": "app/certificates/[id]/page.js",
+  "/api/enrollments/route": "app/api/enrollments/route.js",
+  "/api/announcements/route": "app/api/announcements/route.js",
+  "/activities/page": "app/activities/page.js",
+  "/api/activities/route": "app/api/activities/route.js",
+  "/clubs/page": "app/clubs/page.js",
+  "/api/clubs/route": "app/api/clubs/route.js",
+  "/api/profile/route": "app/api/profile/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/page": "app/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/api/certificates/route": "app/api/certificates/route.js",
+  "/api/favorites/route": "app/api/favorites/route.js"
+}

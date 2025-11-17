@@ -1,15 +1,7 @@
 {
   "/dashboard/page": "app/dashboard/page.js",
   "/leaderboard/page": "app/leaderboard/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
   "/page": "app/page.js",
-  "/portfolio/page": "app/portfolio/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/announcements/route": "app/api/announcements/route.js",
-  "/api/enrollments/route": "app/api/enrollments/route.js",
-  "/activities/page": "app/activities/page.js",
-  "/api/activities/route": "app/api/activities/route.js",
-  "/api/favorites/route": "app/api/favorites/route.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/api/clubs/route": "app/api/clubs/route.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/portfolio/page": "app/portfolio/page.js"
 }

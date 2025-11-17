@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeProvider as ColorThemeProvider } from "@/contexts/theme-context"
 import { LanguageProvider } from "@/contexts/language-context"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] })
 const cairo = Cairo({ subsets: ["arabic", "latin"] })
@@ -34,6 +35,7 @@ export default function RootLayout({
                 {children}
                 <Toaster />
                 <SpeedInsights />
+                <Analytics />
               </Providers>
             </LanguageProvider>
           </ColorThemeProvider>

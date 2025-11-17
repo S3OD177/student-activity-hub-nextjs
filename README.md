@@ -1,5 +1,14 @@
 # Student Activity Hub - Next.js 14
 
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://student-activity-hub-nextjs.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+## 🌐 Live Demo
+
+**🚀 Preview:** [https://student-activity-hub-nextjs.vercel.app](https://student-activity-hub-nextjs.vercel.app)
+
 A comprehensive web application for managing student extracurricular activities, built with modern technologies and best practices. This platform serves students, administrators, and club leaders with role-based access control and real-time activity management.
 
 ## 🌟 Features
@@ -205,6 +214,9 @@ npx prisma studio        # Open Prisma Studio
 - Certificates are linked to completed enrollments
 
 ## 🚀 Deployment
+
+### 🌐 Live Preview
+**Current Deployment:** [https://student-activity-hub-nextjs.vercel.app](https://student-activity-hub-nextjs.vercel.app)
 
 ### Vercel (Recommended)
 1. Push code to GitHub repository

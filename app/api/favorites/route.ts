@@ -32,12 +32,16 @@ export async function POST(req: Request) {
 
     const { activityId } = await req.json()
 
-    const favorite = await prisma.favorite.create({
-      data: {
-        userId: parseInt(session.user.id),
-        activityId: parseInt(activityId)
-      }
-    })
+    const { data: favorite, error } = await supabase
+      .from('favorites')
+      .insert({
+        user_id: parseInt(session.user.id),
+        activity_id: parseInt(activityId)
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(favorite)
   } catch (error) {
@@ -55,12 +59,13 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url)
     const activityId = searchParams.get("activityId")
 
-    await prisma.favorite.deleteMany({
-      where: {
-        userId: parseInt(session.user.id),
-        activityId: parseInt(activityId!)
-      }
-    })
+    const { error } = await supabase
+      .from('favorites')
+      .delete()
+      .eq('user_id', parseInt(session.user.id))
+      .eq('activity_id', parseInt(activityId!))
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

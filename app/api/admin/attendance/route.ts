@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function POST(request: Request) {
   try {
@@ -18,20 +18,23 @@ export async function POST(request: Request) {
     }
 
     // Get all enrollments for this activity
-    const allEnrollments = await prisma.enrollment.findMany({
-      where: { activityId }
-    })
+    const { data: allEnrollments, error } = await supabase
+      .from('enrollments')
+      .select('*')
+      .eq('activity_id', activityId)
+
+    if (error) throw error
 
     // Update attendance for all enrollments
     // Mark selected ones as attended, others as not attended
     await Promise.all(
       allEnrollments.map(enrollment =>
-        prisma.enrollment.update({
-          where: { id: enrollment.id },
-          data: {
+        supabase
+          .from('enrollments')
+          .update({
             attended: enrollmentIds.includes(enrollment.id)
-          }
-        })
+          })
+          .eq('id', enrollment.id)
       )
     )
 

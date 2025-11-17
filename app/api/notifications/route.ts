@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET() {
   try {
@@ -10,11 +10,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const notifications = await prisma.notification.findMany({
-      where: { userId: parseInt(session.user.id) },
-      orderBy: { createdAt: "desc" },
-      take: 20
-    })
+    const { data: notifications, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', parseInt(session.user.id))
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
 
     return NextResponse.json(notifications)
   } catch (error) {
@@ -31,10 +34,12 @@ export async function PUT(req: Request) {
 
     const { id } = await req.json()
     
-    await prisma.notification.update({
-      where: { id: parseInt(id) },
-      data: { read: true }
-    })
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', parseInt(id))
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

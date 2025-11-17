@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(req: Request) {
   try {
@@ -18,13 +18,17 @@ export async function GET(req: Request) {
     let headers: string[] = []
 
     if (type === "activities") {
-      data = await prisma.activity.findMany({
-        include: {
-          _count: {
-            select: { enrollments: true }
-          }
-        }
-      })
+      const { data: activities, error } = await supabase
+        .from('activities')
+        .select('*, enrollments(id)')
+
+      if (error) throw error
+
+      // Count enrollments manually
+      data = activities?.map((activity: any) => ({
+        ...activity,
+        _count: { enrollments: activity.enrollments?.length || 0 }
+      })) || []
       filename = "activities.csv"
       headers = ["ID", "Title", "Description", "Date", "Location", "Max Students", "Enrollments", "Category", "Instructor", "Status"]
       
@@ -53,16 +57,13 @@ export async function GET(req: Request) {
     }
 
     if (type === "enrollments") {
-      data = await prisma.enrollment.findMany({
-        include: {
-          user: {
-            select: { username: true, email: true, fullName: true }
-          },
-          activity: {
-            select: { title: true, date: true }
-          }
-        }
-      })
+      const { data: enrollments, error } = await supabase
+        .from('enrollments')
+        .select('*, user(username, email, full_name), activity(title, date)')
+
+      if (error) throw error
+
+      data = enrollments || []
       filename = "enrollments.csv"
       headers = ["ID", "User", "Email", "Activity", "Activity Date", "Enrollment Date"]
       
@@ -87,19 +88,19 @@ export async function GET(req: Request) {
     }
 
     if (type === "users") {
-      data = await prisma.user.findMany({
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          fullName: true,
-          role: true,
-          createdAt: true,
-          _count: {
-            select: { enrollments: true }
-          }
-        }
-      })
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('id, username, email, full_name, role, created_at, enrollments(id)')
+
+      if (error) throw error
+
+      // Count enrollments manually
+      data = users?.map((user: any) => ({
+        ...user,
+        fullName: user.full_name,
+        createdAt: user.created_at,
+        _count: { enrollments: user.enrollments?.length || 0 }
+      })) || []
       filename = "users.csv"
       headers = ["ID", "Username", "Email", "Full Name", "Role", "Enrollments", "Joined Date"]
       

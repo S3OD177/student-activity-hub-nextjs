@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET() {
   try {
@@ -10,15 +10,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(session.user.id) },
-      select: {
-        emailNotifications: true,
-        profileVisibility: true,
-        language: true,
-        twoFactorEnabled: true
-      }
-    })
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('email_notifications, profile_visibility, language, two_factor_enabled')
+      .eq('id', parseInt(session.user.id))
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(user)
   } catch (error) {
@@ -35,14 +33,18 @@ export async function PUT(req: Request) {
 
     const data = await req.json()
     
-    const user = await prisma.user.update({
-      where: { id: parseInt(session.user.id) },
-      data: {
-        emailNotifications: data.emailNotifications,
-        profileVisibility: data.profileVisibility,
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({
+        email_notifications: data.emailNotifications,
+        profile_visibility: data.profileVisibility,
         language: data.language,
-      }
-    })
+      })
+      .eq('id', parseInt(session.user.id))
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(user)
   } catch (error) {

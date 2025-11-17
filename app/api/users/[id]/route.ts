@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(
   req: Request,
@@ -17,25 +17,13 @@ export async function GET(
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(params.id) },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-        phoneNumber: true,
-        role: true,
-        isVerified: true,
-        createdAt: true,
-        userInterests: {
-          select: {
-            academicLevel: true,
-            major: true,
-          }
-        }
-      }
-    })
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*, user_interests(*)')
+      .eq('id', parseInt(params.id))
+      .single()
+
+    if (error) throw error
 
     if (!user) {
       return NextResponse.json(
@@ -88,29 +76,40 @@ export async function PUT(
     const { username, email, fullName, phoneNumber, academicLevel, major } = body
 
     // Update user
-    const user = await prisma.user.update({
-      where: { id: parseInt(params.id) },
-      data: {
+    const { data: user, error: updateError } = await supabase
+      .from('users')
+      .update({
         username,
         email,
-        fullName,
-        phoneNumber,
-      }
-    })
+        full_name: fullName,
+        phone_number: phoneNumber,
+      })
+      .eq('id', parseInt(params.id))
+      .select()
+      .single()
+
+    if (updateError) throw updateError
 
     // Update or create user interests
     if (academicLevel && major) {
-      await prisma.userInterest.deleteMany({
-        where: { userId: parseInt(params.id) }
-      })
+      // Delete existing interests
+      const { error: deleteError } = await supabase
+        .from('user_interests')
+        .delete()
+        .eq('user_id', parseInt(params.id))
       
-      await prisma.userInterest.create({
-        data: {
-          userId: parseInt(params.id),
-          academicLevel,
+      if (deleteError) throw deleteError
+      
+      // Create new interests
+      const { error: createError } = await supabase
+        .from('user_interests')
+        .insert({
+          user_id: parseInt(params.id),
+          academic_level: academicLevel,
           major,
-        }
-      })
+        })
+      
+      if (createError) throw createError
     }
 
     return NextResponse.json(user)

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 // Issue certificate to a single enrollment
 export async function POST(request: Request) {
@@ -13,13 +13,13 @@ export async function POST(request: Request) {
 
     const { enrollmentId } = await request.json()
 
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { id: enrollmentId },
-      include: {
-        user: true,
-        activity: true,
-      },
-    })
+    const { data: enrollment, error } = await supabase
+      .from('enrollments')
+      .select('*, user(*), activity(*)')
+      .eq('id', enrollmentId)
+      .single()
+
+    if (error) throw error
 
     if (!enrollment) {
       return NextResponse.json({ error: "Enrollment not found" }, { status: 404 })
@@ -34,25 +34,31 @@ export async function POST(request: Request) {
     }
 
     // Update certificate status
-    const updated = await prisma.enrollment.update({
-      where: { id: enrollmentId },
-      data: {
-        certificateIssued: true,
-        certificateDate: new Date(),
+    const { data: updated, error: updateError } = await supabase
+      .from('enrollments')
+      .update({
+        certificate_issued: true,
+        certificate_date: new Date().toISOString(),
         attended: true, // Mark as attended when issuing certificate
-      },
-    })
+      })
+      .eq('id', enrollmentId)
+      .select()
+      .single()
+
+    if (updateError) throw updateError
 
     // Create notification for user
-    await prisma.notification.create({
-      data: {
-        userId: enrollment.userId,
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: enrollment.user_id,
         title: "Certificate Issued",
         message: `Your certificate for "${enrollment.activity.title}" is now available!`,
         type: "badge",
         read: false,
-      },
-    })
+      })
+
+    if (notificationError) throw notificationError
 
     return NextResponse.json(updated)
   } catch (error) {
@@ -71,19 +77,13 @@ export async function PUT(request: Request) {
 
     const { activityId } = await request.json()
 
-    const activity = await prisma.activity.findUnique({
-      where: { id: activityId },
-      include: {
-        enrollments: {
-          where: {
-            certificateIssued: false,
-          },
-          include: {
-            user: true,
-          },
-        },
-      },
-    })
+    const { data: activity, error } = await supabase
+      .from('activities')
+      .select('*, enrollments(*, user(*))')
+      .eq('id', activityId)
+      .single()
+
+    if (error) throw error
 
     if (!activity) {
       return NextResponse.json({ error: "Activity not found" }, { status: 404 })
@@ -101,25 +101,29 @@ export async function PUT(request: Request) {
     const updates = await Promise.all(
       activity.enrollments.map(async (enrollment) => {
         // Update enrollment - mark as attended and issue certificate
-        await prisma.enrollment.update({
-          where: { id: enrollment.id },
-          data: {
+        const { error: updateError } = await supabase
+          .from('enrollments')
+          .update({
             attended: true,
-            certificateIssued: true,
-            certificateDate: new Date(),
-          },
-        })
+            certificate_issued: true,
+            certificate_date: new Date().toISOString(),
+          })
+          .eq('id', enrollment.id)
+
+        if (updateError) throw updateError
 
         // Create notification
-        await prisma.notification.create({
-          data: {
-            userId: enrollment.userId,
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: enrollment.user_id,
             title: "Certificate Issued",
             message: `Your certificate for "${activity.title}" is now available!`,
             type: "badge",
             read: false,
-          },
-        })
+          })
+
+        if (notificationError) throw notificationError
 
         return enrollment
       })

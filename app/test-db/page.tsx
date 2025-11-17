@@ -1,7 +1,13 @@
 import { testDatabaseConnection } from '@/lib/supabase';
 
+type DatabaseResult = {
+  success: boolean;
+  error?: any;
+  data?: any;
+};
+
 export default async function TestDBPage() {
-  let result;
+  let result: DatabaseResult;
   try {
     result = await testDatabaseConnection();
   } catch (error) {
@@ -24,7 +30,7 @@ export default async function TestDBPage() {
         ) : (
           <div className="p-4 bg-red-100 text-red-800 rounded-lg">
             <p className="font-semibold">❌ Database connection failed</p>
-            <p className="mt-2">Error: {result.error?.message || 'Unknown error'}</p>
+            <p className="mt-2">Error: {result.error ? String(result.error) : 'Unknown error'}</p>
           </div>
         )}
 

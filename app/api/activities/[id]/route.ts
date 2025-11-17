@@ -1,35 +1,26 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const activity = await prisma.activity.findUnique({
-      where: { id: parseInt(params.id) },
-      include: {
-        enrollments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                email: true,
-                fullName: true,
-              }
-            }
-          }
-        },
-        _count: {
-          select: { enrollments: true }
-        }
-      }
-    })
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*, enrollments(*, user(*))')
+      .eq('id', params.id)
 
-    if (!activity) {
+    if (error) {
+      return NextResponse.json(
+        { error: "Activity not found" },
+        { status: 404 }
+      )
+    }
+
+    if (!data || data.length === 0) {
       return NextResponse.json(
         { error: "Activity not found" },
         { status: 404 }
@@ -63,13 +54,17 @@ export async function PUT(
     const body = await req.json()
     const { date, ...rest } = body
 
-    const activity = await prisma.activity.update({
-      where: { id: parseInt(params.id) },
-      data: {
+    const { data: activity, error } = await supabase
+      .from('activities')
+      .update({
         ...rest,
-        ...(date && { date: new Date(date) }),
-      }
-    })
+        ...(date && { date: new Date(date).toISOString() }),
+      })
+      .eq('id', params.id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(activity)
   } catch (error) {
@@ -95,9 +90,12 @@ export async function DELETE(
       )
     }
 
-    await prisma.activity.delete({
-      where: { id: parseInt(params.id) }
-    })
+    const { error } = await supabase
+      .from('activities')
+      .delete()
+      .eq('id', params.id)
+
+    if (error) throw error
 
     return NextResponse.json({ message: "Activity deleted successfully" })
   } catch (error) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -10,14 +10,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const membership = await prisma.clubMembership.create({
-      data: {
-        clubId: parseInt(params.id),
-        userId: parseInt(session.user.id),
+    const { data: membership, error } = await supabase
+      .from('memberships')
+      .insert({
+        club_id: parseInt(params.id),
+        user_id: parseInt(session.user.id),
         status: "approved",
         role: "member"
-      }
-    })
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(membership)
   } catch (error) {
@@ -32,12 +36,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await prisma.clubMembership.deleteMany({
-      where: {
-        clubId: parseInt(params.id),
-        userId: parseInt(session.user.id)
-      }
-    })
+    const { error } = await supabase
+      .from('memberships')
+      .delete()
+      .eq('club_id', parseInt(params.id))
+      .eq('user_id', parseInt(session.user.id))
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

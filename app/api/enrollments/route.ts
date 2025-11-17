@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 
 export async function GET(req: Request) {
   try {
@@ -14,13 +14,13 @@ export async function GET(req: Request) {
       )
     }
 
-    const enrollments = await prisma.enrollment.findMany({
-      where: { userId: parseInt(session.user.id) },
-      include: {
-        activity: true
-      },
-      orderBy: { enrolledAt: "desc" }
-    })
+    const { data: enrollments, error } = await supabase
+      .from('enrollments')
+      .select('*, activity(*)')
+      .eq('user_id', parseInt(session.user.id))
+      .order('enrolled_at', { ascending: false })
+
+    if (error) throw error
 
     return NextResponse.json(enrollments)
   } catch (error) {
@@ -52,12 +52,13 @@ export async function POST(req: Request) {
       )
     }
 
-    const existing = await prisma.enrollment.findFirst({
-      where: {
-        userId: parseInt(session.user.id),
-        activityId: parseInt(activityId)
-      }
-    })
+    const { data: existing } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', parseInt(session.user.id))
+      .eq('activity_id', parseInt(activityId))
+      .limit(1)
+      .single()
 
     if (existing) {
       return NextResponse.json(
@@ -66,28 +67,31 @@ export async function POST(req: Request) {
       )
     }
 
-    const activity = await prisma.activity.findUnique({
-      where: { id: parseInt(activityId) },
-      include: {
-        _count: {
-          select: { enrollments: true }
-        }
-      }
-    })
+    const { data: activity, error: activityError } = await supabase
+      .from('activities')
+      .select('*, enrollments(count)')
+      .eq('id', parseInt(activityId))
+      .single()
 
-    if (activity && activity.maxStudents > 0 && activity._count.enrollments >= activity.maxStudents) {
+    if (activityError) throw activityError
+
+    if (activity && activity.max_students > 0 && activity.enrollments && activity.enrollments.length >= activity.max_students) {
       return NextResponse.json(
         { error: "Activity is full" },
         { status: 400 }
       )
     }
 
-    const enrollment = await prisma.enrollment.create({
-      data: {
-        userId: parseInt(session.user.id),
-        activityId: parseInt(activityId)
-      }
-    })
+    const { data: enrollment, error: createError } = await supabase
+      .from('enrollments')
+      .insert({
+        user_id: parseInt(session.user.id),
+        activity_id: parseInt(activityId)
+      })
+      .select()
+      .single()
+
+    if (createError) throw createError
 
     return NextResponse.json(enrollment, { status: 201 })
   } catch (error: any) {

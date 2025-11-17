@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -18,14 +18,12 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { username, email, password, fullName, phoneNumber, academicLevel, major } = registerSchema.parse(body)
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username }
-        ]
-      }
-    })
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .or(`email.eq.${email},username.eq.${username}`)
+      .limit(1)
+      .single()
 
     if (existingUser) {
       return NextResponse.json(
@@ -37,26 +35,30 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10)
     const verificationCode = Math.floor(1000 + Math.random() * 9000).toString()
 
-    const user = await prisma.user.create({
-      data: {
+    const { data: user, error: createError } = await supabase
+      .from('users')
+      .insert({
         username,
         email,
         password: hashedPassword,
-        fullName,
-        phoneNumber,
-        verificationCode,
-        isVerified: true,
-      }
-    })
+        full_name: fullName,
+        phone_number: phoneNumber,
+        verification_code: verificationCode,
+        is_verified: true,
+      })
+      .select()
+      .single()
+
+    if (createError) throw createError
 
     if (academicLevel && major) {
-      await prisma.userInterest.create({
-        data: {
-          userId: user.id,
-          academicLevel,
+      await supabase
+        .from('user_interests')
+        .insert({
+          user_id: user.id,
+          academic_level: academicLevel,
           major,
-        }
-      })
+        })
     }
 
     return NextResponse.json(

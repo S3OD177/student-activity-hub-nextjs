@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 import bcrypt from "bcryptjs"
 
 export async function POST(req: Request) {
@@ -18,9 +18,13 @@ export async function POST(req: Request) {
     const { currentPassword, newPassword } = await req.json()
 
     // Get user with password
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(session.user.id) }
-    })
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('password')
+      .eq('id', parseInt(session.user.id))
+      .single()
+
+    if (fetchError) throw fetchError
 
     if (!user) {
       return NextResponse.json(
@@ -43,10 +47,12 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     // Update password
-    await prisma.user.update({
-      where: { id: parseInt(session.user.id) },
-      data: { password: hashedPassword }
-    })
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', parseInt(session.user.id))
+
+    if (updateError) throw updateError
 
     return NextResponse.json({ message: "Password updated successfully" })
   } catch (error) {

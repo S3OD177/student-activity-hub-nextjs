@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase-api"
 import crypto from "crypto"
 
 export async function POST(req: Request) {
@@ -17,13 +17,17 @@ export async function POST(req: Request) {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + expiresInHours)
 
-    const checkInToken = await prisma.checkInToken.create({
-      data: {
-        activityId: parseInt(activityId),
+    const { data: checkInToken, error } = await supabase
+      .from('check_in_tokens')
+      .insert({
+        activity_id: parseInt(activityId),
         token,
-        expiresAt
-      }
-    })
+        expires_at: expiresAt.toISOString()
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json({ token: checkInToken.token, expiresAt })
   } catch (error) {

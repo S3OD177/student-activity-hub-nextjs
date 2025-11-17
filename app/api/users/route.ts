@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function GET(req: Request) {
   try {
@@ -14,25 +19,14 @@ export async function GET(req: Request) {
       )
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        fullName: true,
-        isVerified: true,
-        createdAt: true,
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    })
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, username, email, role, full_name, is_verified, created_at')
+      .order('created_at', { ascending: false })
 
-    return NextResponse.json(users)
+    if (error) throw error
+
+    return NextResponse.json(users || [])
   } catch (error) {
     console.error("Error fetching users:", error)
     return NextResponse.json(

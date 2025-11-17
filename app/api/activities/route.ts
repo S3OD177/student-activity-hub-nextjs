@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { createClient } from '@supabase/supabase-js'
 import { z } from "zod"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 const activitySchema = z.object({
   title: z.string().min(1),
@@ -50,17 +55,14 @@ export async function GET(req: Request) {
       where.major = major
     }
 
-    const activities = await prisma.activity.findMany({
-      where,
-      include: {
-        _count: {
-          select: { enrollments: true }
-        }
-      },
-      orderBy: { date: "desc" }
-    })
+    const { data: activities, error } = await supabase
+      .from('activities')
+      .select('*')
+      .order('date', { ascending: false })
 
-    return NextResponse.json(activities)
+    if (error) throw error
+
+    return NextResponse.json(activities || [])
   } catch (error) {
     console.error("Error fetching activities:", error)
     return NextResponse.json(
@@ -84,13 +86,22 @@ export async function POST(req: Request) {
     const body = await req.json()
     const data = activitySchema.parse(body)
 
-    const activity = await prisma.activity.create({
-      data: {
-        ...data,
-        date: new Date(data.date),
-        maxStudents: data.maxStudents || 0,
-      }
-    })
+    const { data: activity, error } = await supabase
+      .from('activities')
+      .insert({
+        title: data.title,
+        description: data.description,
+        date: new Date(data.date).toISOString(),
+        location: data.location,
+        max_students: data.maxStudents || 0,
+        academic_level: data.academicLevel,
+        major: data.major,
+        instructor: data.instructor,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(activity, { status: 201 })
   } catch (error) {

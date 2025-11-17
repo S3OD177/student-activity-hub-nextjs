@@ -13,6 +13,9 @@ import { ThemeSelectorCard } from "@/components/theme-selector"
 import { useToast } from "@/components/ui/use-toast"
 import { Settings as SettingsIcon, Bell, Lock, Eye, Globe } from "lucide-react"
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export default function SettingsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()

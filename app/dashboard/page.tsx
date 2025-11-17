@@ -105,8 +105,8 @@ export default function DashboardPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white">Welcome back, {session.user.name}! 👋</h1>
-                <p className="text-white/90 text-lg">Here's what's happening with your activities</p>
+                <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white">{t('dashboard.welcome')}, {session.user.name}! 👋</h1>
+                <p className="text-white/90 text-lg">{t('dashboard.recentActivities')}</p>
               </div>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
               <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-green-500 to-green-600 text-white">
                 <CardContent className="p-6 text-center">
                   <Users className="h-8 w-8 mx-auto mb-2" />
-                  <p className="font-semibold text-sm">Join Clubs</p>
+                  <p className="font-semibold text-sm">{t('clubs.joinClub')}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                 <CardContent className="p-6 text-center">
                   <BookOpen className="h-8 w-8 mx-auto mb-2" />
-                  <p className="font-semibold text-sm">My Portfolio</p>
+                  <p className="font-semibold text-sm">{t('nav.portfolio')}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
                 <CardContent className="p-6 text-center">
                   <BookOpen className="h-8 w-8 mx-auto mb-2" />
-                  <p className="font-semibold text-sm">Leaderboard</p>
+                  <p className="font-semibold text-sm">{t('dashboard.leaderboard')}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                 <Link key={enrollment.id} href="/activities">
                   <Card className="hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 hover:scale-[1.02] cursor-pointer">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg sm:text-xl">{enrollment.activity.title}</CardTitle>
+                      <CardTitle className="text-2xl">{t('dashboard.upcomingActivities')}</CardTitle>
                       <CardDescription className="flex items-center text-sm">
                         <Calendar className="h-4 w-4 mr-1" />
                         {new Date(enrollment.activity.date).toLocaleDateString('en-US', {

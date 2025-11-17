@@ -16,12 +16,14 @@ import { Progress } from "@/components/ui/progress"
 import { ActivityCardSkeleton } from "@/components/loading-skeleton"
 import { Badge } from "@/components/ui/badge"
 import { useTheme } from "@/contexts/theme-context"
+import { useLanguage } from "@/contexts/language-context"
 
 export default function ActivitiesPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const { toast } = useToast()
   const { themeConfig } = useTheme()
+  const { t } = useLanguage()
   const [activities, setActivities] = useState<any[]>([])
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [favorites, setFavorites] = useState<any[]>([])

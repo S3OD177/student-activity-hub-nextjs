@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/contexts/theme-context"
+import { useLanguage } from "@/contexts/language-context"
 import { 
   Users, 
   Calendar, 
@@ -34,6 +35,7 @@ export default function AdminAnalyticsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { themeConfig } = useTheme()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month")
@@ -196,8 +198,8 @@ export default function AdminAnalyticsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Analytics Dashboard</h1>
-              <p className="text-white/90 text-lg">Comprehensive insights and statistics</p>
+              <h1 className="text-4xl font-bold mb-2">{t('analytics.title')}</h1>
+              <p className="text-white/90 text-lg">{t('analytics.overview')}</p>
             </div>
             <div className="flex gap-2">
               <Button 
@@ -207,11 +209,11 @@ export default function AdminAnalyticsPage() {
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                {t('analytics.refresh')}
               </Button>
               <Button onClick={exportData} variant="secondary">
                 <Download className="h-4 w-4 mr-2" />
-                Export Data
+                {t('analytics.exportData')}
               </Button>
             </div>
           </div>
@@ -233,11 +235,11 @@ export default function AdminAnalyticsPage() {
                   <Minus className="h-5 w-5 text-gray-600" />
                 )}
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Activities</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.totalActivities')}</p>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{overview.totalActivities || 0}</p>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-gray-500 dark:text-gray-500">
-                  {overview.upcomingActivities} upcoming
+                  {overview.upcomingActivities} {t('activities.upcoming').toLowerCase()}
                 </p>
                 {growthMetrics?.activitiesGrowth !== undefined && (
                   <span className={`text-xs font-medium ${
@@ -261,7 +263,7 @@ export default function AdminAnalyticsPage() {
                   <Minus className="h-5 w-5 text-gray-600" />
                 )}
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Enrollments</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.totalEnrollments')}</p>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">{overview.totalEnrollments || 0}</p>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -282,7 +284,7 @@ export default function AdminAnalyticsPage() {
                 <UserCheck className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Attendance Rate</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.attendanceRate')}</p>
               <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{overview.attendanceRate}%</p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 Past activities
@@ -296,7 +298,7 @@ export default function AdminAnalyticsPage() {
                 <Award className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                 <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Certificates Issued</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.certificatesIssued')}</p>
               <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{overview.certificatesIssued || 0}</p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 To students
@@ -310,7 +312,7 @@ export default function AdminAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
-              Activity Status Overview
+              {t('analytics.statusOverview')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -318,34 +320,34 @@ export default function AdminAnalyticsPage() {
               <div className="p-4 border-l-4 border-green-600 bg-green-50 dark:bg-green-950/30 rounded">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100">Active</p>
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100">{t('analytics.active')}</p>
                 </div>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {statusBreakdown?.active || 0}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Upcoming activities</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{t('activities.upcoming')} {t('nav.activities').toLowerCase()}</p>
               </div>
               
               <div className="p-4 border-l-4 border-blue-600 bg-blue-50 dark:bg-blue-950/30 rounded">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="h-5 w-5 text-blue-600" />
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Completed</p>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">{t('analytics.completed')}</p>
                 </div>
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {statusBreakdown?.completed || 0}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Past activities</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{t('activities.past')} {t('nav.activities').toLowerCase()}</p>
               </div>
               
               <div className="p-4 border-l-4 border-red-600 bg-red-50 dark:bg-red-950/30 rounded">
                 <div className="flex items-center gap-2 mb-2">
                   <XCircle className="h-5 w-5 text-red-600" />
-                  <p className="text-sm font-medium text-red-900 dark:text-red-100">Cancelled</p>
+                  <p className="text-sm font-medium text-red-900 dark:text-red-100">{t('analytics.cancelled')}</p>
                 </div>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {statusBreakdown?.cancelled || 0}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Cancelled activities</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{t('analytics.cancelled')} {t('nav.activities').toLowerCase()}</p>
               </div>
             </div>
           </CardContent>
@@ -356,9 +358,9 @@ export default function AdminAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Top Performing Activities
+              {t('analytics.topActivities')}
             </CardTitle>
-            <CardDescription>Activities with the highest enrollment</CardDescription>
+            <CardDescription>{t('analytics.insights')}</CardDescription>
           </CardHeader>
           <CardContent>
             {topActivities && topActivities.length > 0 ? (
@@ -401,13 +403,13 @@ export default function AdminAnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Quick Insights
+              {t('analytics.insights')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="p-4 border-l-4 border-blue-600 bg-blue-50 dark:bg-blue-950/30 rounded">
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Engagement Rate</p>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">{t('analytics.engagementRate')}</p>
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {overview.activeUsers > 0 && overview.totalActivities > 0 
                     ? ((overview.totalEnrollments / (overview.activeUsers * overview.totalActivities)) * 100).toFixed(1) 
@@ -417,7 +419,7 @@ export default function AdminAnalyticsPage() {
               </div>
               
               <div className="p-4 border-l-4 border-green-600 bg-green-50 dark:bg-green-950/30 rounded">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">Certificate Completion</p>
+                <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">{t('analytics.certificateCompletion')}</p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {overview.totalEnrollments > 0 
                     ? ((overview.certificatesIssued / overview.totalEnrollments) * 100).toFixed(1) 
@@ -427,7 +429,7 @@ export default function AdminAnalyticsPage() {
               </div>
               
               <div className="p-4 border-l-4 border-purple-600 bg-purple-50 dark:bg-purple-950/30 rounded">
-                <p className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">Activity Success Rate</p>
+                <p className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">{t('analytics.successRate')}</p>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{overview.attendanceRate}%</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Students attending activities</p>
               </div>

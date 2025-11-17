@@ -12,43 +12,43 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log(' Auth attempt with email:', credentials?.email)
+        console.log('🔍 Auth attempt with email:', credentials?.email)
         
         if (!credentials?.email || !credentials?.password) {
-          console.log(' Missing credentials')
+          console.log('❌ Missing credentials')
           throw new Error("Invalid credentials")
         }
 
         try {
-          console.log(' Looking up user in database...')
+          console.log('🔍 Looking up user in database...')
           const user = await prisma.user.findUnique({
             where: { email: credentials.email }
           })
 
-          console.log(' User found:', !!user)
+          console.log('🔍 User found:', !!user)
           if (!user) {
-            console.log(' User not found in database')
+            console.log('❌ User not found in database')
             throw new Error("User not found")
           }
 
-          console.log(' Comparing passwords...')
+          console.log('🔍 Comparing passwords...')
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           )
 
-          console.log(' Password valid:', isPasswordValid)
+          console.log('🔍 Password valid:', isPasswordValid)
           if (!isPasswordValid) {
-            console.log(' Invalid password')
+            console.log('❌ Invalid password')
             throw new Error("Invalid password")
           }
 
           if (!user.isVerified) {
-            console.log(' User not verified')
+            console.log('❌ User not verified')
             throw new Error("Please verify your email first")
           }
 
-          console.log(' Authentication successful for:', user.email)
+          console.log('✅ Authentication successful for:', user.email)
           return {
             id: user.id.toString(),
             email: user.email,
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           }
         } catch (error) {
-          console.error(' Auth error:', error)
+          console.error('❌ Auth error:', error)
           if (error instanceof Error) {
             throw error
           }

@@ -29,12 +29,7 @@ export default function LoginPage() {
 
       if (loginError) {
         setError(loginError.message)
-      } else if (data.user) {
-        // Store user in session
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('currentUser', JSON.stringify(data.user))
-        }
-        
+      } else if (data?.user) {
         // Redirect based on role
         const redirectPath = data.user.role === 'admin' ? '/admin' : '/dashboard'
         window.location.href = redirectPath

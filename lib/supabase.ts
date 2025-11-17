@@ -1,8 +1,9 @@
 import { createClient as createBrowserClient } from '@/utils/supabase/client'
+import bcrypt from 'bcryptjs'
 
 // Simple authentication helper using official Supabase pattern
 export const db = {
-  // Sign in user - check against public.users table
+  // Sign in user - check against public.users table and use Supabase Auth
   async signIn(email: string, password: string) {
     try {
       const supabase = createBrowserClient()
@@ -18,28 +19,33 @@ export const db = {
         return { data: null, error: { message: 'User not found' } }
       }
 
-      // For demo purposes, accept the password as-is
-      // In production, you'd verify the bcrypt hash
-      const validPasswords: Record<string, string> = {
-        'admin@studenthub.com': 'admin123',
-        'user@studenthub.com': 'user123',
-        'leader@studenthub.com': 'leader123'
+      // Verify password with bcrypt
+      const isPasswordValid = await bcrypt.compare(password, users.password)
+      
+      if (!isPasswordValid) {
+        return { data: null, error: { message: 'Invalid password' } }
       }
 
-      if (validPasswords[email] === password) {
-        return { 
-          data: { 
-            user: {
-              id: users.id,
-              email: users.email,
-              role: users.role,
-              username: users.username
-            }
-          }, 
-          error: null 
-        }
-      } else {
-        return { data: null, error: { message: 'Invalid password' } }
+      // Store user data in localStorage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: users.id,
+          email: users.email,
+          role: users.role,
+          username: users.username
+        }))
+      }
+
+      return { 
+        data: { 
+          user: {
+            id: users.id,
+            email: users.email,
+            role: users.role,
+            username: users.username
+          }
+        }, 
+        error: null 
       }
     } catch (err) {
       return { data: null, error: { message: 'Login failed' } }
@@ -48,13 +54,16 @@ export const db = {
 
   // Sign out
   async signOut() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('currentUser')
+    }
     return { error: null }
   },
 
-  // Get current user (from session storage for now)
+  // Get current user
   async getUser() {
     if (typeof window !== 'undefined') {
-      const userStr = sessionStorage.getItem('currentUser')
+      const userStr = localStorage.getItem('currentUser')
       return userStr ? JSON.parse(userStr) : null
     }
     return null

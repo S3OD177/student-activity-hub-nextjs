@@ -56,7 +56,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2 border-white text-white hover:bg-white hover:text-blue-600 transition-all transform hover:scale-105 font-semibold">
+                <Button size="lg" className="text-lg px-10 py-6 bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 transition-all transform hover:scale-105 font-semibold backdrop-blur-sm">
                   {t('landing.signIn')}
                 </Button>
               </Link>

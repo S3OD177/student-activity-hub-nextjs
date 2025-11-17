@@ -35,9 +35,9 @@ export default function LoginPage() {
           sessionStorage.setItem('currentUser', JSON.stringify(data.user))
         }
         
-        alert("Login successful!")
-        router.push("/dashboard")
-        router.refresh()
+        // Redirect based on role
+        const redirectPath = data.user.role === 'admin' ? '/admin' : '/dashboard'
+        window.location.href = redirectPath
       }
     } catch (err) {
       setError("Something went wrong")

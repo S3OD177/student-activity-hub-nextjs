@@ -30,7 +30,7 @@ export default async function TestDBPage() {
         ) : (
           <div className="p-4 bg-red-100 text-red-800 rounded-lg">
             <p className="font-semibold">❌ Database connection failed</p>
-            <p className="mt-2">Error: {result.error ? String(result.error) : 'Unknown error'}</p>
+            <p className="mt-2">Error: {typeof result.error === 'string' ? result.error : 'Database connection failed'}</p>
           </div>
         )}
 

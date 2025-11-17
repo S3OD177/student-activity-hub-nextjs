@@ -13,15 +13,9 @@ export async function GET() {
     const enrollments = await prisma.enrollment.findMany({
       where: { userId: parseInt(session.user.id) },
       include: {
-        activity: {
-          include: {
-            reviews: {
-              where: { userId: parseInt(session.user.id) }
-            }
-          }
-        }
+        activity: true
       },
-      orderBy: { enrollmentDate: "desc" }
+      orderBy: { id: "desc" }
     })
 
     const past = enrollments.filter(e => new Date(e.activity.date) < new Date())

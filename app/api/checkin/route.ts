@@ -37,21 +37,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not enrolled in this activity" }, { status: 400 })
     }
 
-    // Create or update attendance
-    const attendance = await prisma.attendance.upsert({
-      where: {
-        enrollmentId: enrollment.id
-      },
-      update: {
-        attended: true,
-        checkInTime: new Date()
-      },
-      create: {
-        enrollmentId: enrollment.id,
-        attended: true,
-        checkInTime: new Date()
-      }
+    // Find existing attendance or create new one
+    const existingAttendance = await prisma.attendance.findFirst({
+      where: { enrollmentId: enrollment.id }
     })
+
+    const attendance = existingAttendance
+      ? await prisma.attendance.update({
+          where: { id: existingAttendance.id },
+          data: {
+            attended: true,
+            checkInTime: new Date()
+          }
+        })
+      : await prisma.attendance.create({
+          data: {
+            enrollmentId: enrollment.id,
+            attended: true,
+            checkInTime: new Date()
+          }
+        })
 
     // Award points
     await prisma.user.update({
